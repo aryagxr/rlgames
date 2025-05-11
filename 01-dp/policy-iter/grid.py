@@ -112,15 +112,15 @@ class Grid:
 
     def take_action(self, state, action):
         x, y = state
-        if action == 'up':
-            return (x - 1, y)
-        elif action == 'down':
-            return (x + 1, y)
-        elif action == 'left':
-            return (x, y - 1)
-        elif action == 'right':
-            return (x, y + 1)
+        next_state = {
+            'up': (max(x - 1, 0), y),
+            'down': (min(x + 1, self.height - 1), y),
+            'left': (x, max(y - 1, 0)),
+            'right': (x, min(y + 1, self.width - 1))
+        }
+        return next_state[action]
         
+
 
     def print_policy(self, policy, grid):
         action_symbols = {
@@ -144,8 +144,6 @@ class Grid:
 
 
     
-
-
 
 
 
