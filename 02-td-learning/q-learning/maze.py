@@ -1,6 +1,6 @@
 import random
 
-class Grid:
+class Maze:
     def __init__(self, width, height, start=(0, 0), goal=(3, 3)):
         self.width = width
         self.height = height
@@ -63,7 +63,7 @@ class Grid:
             for j in range(self.width):
                 state = (i, j)
                 if state == (self.x, self.y):
-                    result += " S "
+                    result += " 🦕 "
                 elif state == self.goal:
                     result += " G "
                 elif self.is_obstacle(state):
@@ -73,9 +73,9 @@ class Grid:
             result += "\n"
         return result
     
-    def generate_random_policy(grid, goal):
-        height = grid.height
-        width = grid.width
+    def generate_random_policy(maze, goal):
+        height = maze.height
+        width = maze.width
         policy = {}
 
         action_symbols = {
@@ -132,7 +132,7 @@ class Grid:
         
 
 
-    def print_policy(self, policy, grid):
+    def print_policy(self, policy, maze):
         action_symbols = {
             'up': '↑',
             'down': '↓',
@@ -140,11 +140,11 @@ class Grid:
             'right': '→'
         }
         print("Policy π:")
-        for i in range(grid.height):
+        for i in range(maze.height):
             row = ''
-            for j in range(grid.width):
+            for j in range(maze.width):
                 state = (i, j)
-                if grid.is_terminal(state):
+                if maze.is_terminal(state):
                     row += ' G '  # Goal state
                 else:
                     action = policy.get(state, ' ')
@@ -157,19 +157,19 @@ class Grid:
 
 
 
-def grid_world():
-    grid = Grid(width=4, height=4, start=(0, 0), goal=(3, 3))
+def create_maze():
+    maze = Maze(width=4, height=4, start=(0, 0), goal=(3, 3))
     print("\nMaze Environment:")
-    print(grid)
-    return grid
+    print(maze)
+    return maze
 
 
-def print_values(V, grid):
-    for i in range(grid.height):
+def print_values(V, maze):
+    for i in range(maze.height):
         row = ""
-        for j in range(grid.width):
+        for j in range(maze.width):
             state = (i, j)
-            if grid.is_terminal(state):
+            if maze.is_terminal(state):
                 row += "  G   "
             else:
                 v = V.get(state, 0)
