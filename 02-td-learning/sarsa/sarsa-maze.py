@@ -1,4 +1,4 @@
-from maze import Maze
+from environments import Maze
 import random
 import numpy as np
 
@@ -87,7 +87,7 @@ def main():
     
     print("\nLearned Policy:")
     policy = agent.get_policy()
-    maze.print_policy(policy, maze)
+    maze.print_policy(policy)
     
     print("\nTesting the learned policy:")
     maze.set_state((0, 0))
