@@ -1,6 +1,6 @@
 # RL Games
 
-A collection of reinforcement learning algorithms and environments implemented in Python. This project demonstrates various RL algorithms including Dynamic Programming, Temporal Difference Learning (SARSA and Q-Learning), and more.
+A collection of reinforcement learning algorithms and environments implemented in Python.
 
 ## Getting Started
 
