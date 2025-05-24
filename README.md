@@ -1,5 +1,7 @@
 # RL Games
 
+> This repo is still in progress and not yet complete.
+
 A collection of reinforcement learning algorithms and environments implemented in Python.
 
 ## Getting Started
