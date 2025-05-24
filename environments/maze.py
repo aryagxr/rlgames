@@ -4,9 +4,18 @@ from .base import BaseEnvironment
 class Maze(BaseEnvironment):
     """A maze environment with obstacles for reinforcement learning"""
     
-    def __init__(self, width: int, height: int, start: Tuple[int, int] = (0, 0), goal: Tuple[int, int] = (3, 3)):
-        # Set obstacles before calling parent's __init__
-        self.obstacles = [(1, 1), (1, 2), (2, 1), (2, 2)]
+    def __init__(
+        self,
+        width: int,
+        height: int,
+        start: Tuple[int, int] = (0, 0),
+        goal: Tuple[int, int] = (3, 3),
+        obstacles: List[Tuple[int, int]] = None
+    ):
+        if obstacles is None:
+            self.obstacles = [(1, 1), (1, 2), (2, 1), (2, 2)]
+        else:
+            self.obstacles = obstacles
         super().__init__(width, height, start, goal)
 
     def is_obstacle(self, state: Tuple[int, int]) -> bool:
@@ -57,7 +66,7 @@ class Maze(BaseEnvironment):
             for j in range(self.width):
                 state = (i, j)
                 if state == (self.x, self.y):
-                    result += " 🦕 "
+                    result += " 👾 "
                 elif state == self.goal:
                     result += " G "
                 elif self.is_obstacle(state):
