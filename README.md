@@ -9,7 +9,6 @@ A collection of reinforcement learning algorithms and environments implemented i
 ### 1. Clone the Repository
 
 ```bash
-# Clone the repository
 git clone https://github.com/aryagxr/rlgames.git
 cd rlgames
 ```
@@ -21,7 +20,6 @@ You can use either `venv` (Python's built-in virtual environment) or `conda` (An
 #### Option 1: Using venv (Python's built-in virtual environment)
 
 ```bash
-# Create a virtual environment
 python -m venv venv
 
 # Activate the virtual environment
@@ -34,10 +32,8 @@ source venv/bin/activate
 #### Option 2: Using conda (Anaconda/Miniconda)
 
 ```bash
-# Create a conda environment
 conda create -n rlgames
 
-# Activate the conda environment
 conda activate rlgames
 ```
 
@@ -49,7 +45,6 @@ Install the required packages:
 # Install dependencies
 pip install -r requirements.txt
 
-# Install the package in development mode
 pip install -e .
 ```
 
