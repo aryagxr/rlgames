@@ -150,9 +150,8 @@ def test_agent(agent, maze, episodes=5):
         print(f"\nEpisode finished in {steps} steps with total reward: {total_reward}")
 
 if __name__ == "__main__":
-    # Create maze with obstacles
     obstacles = [
-        (0, 4),  # Added obstacle at first row, fifth column
+        (0, 4),  
         (1, 0), (1, 1), (1, 4),
         (2, 2), (2, 4),
         (3, 1), (3, 2),
@@ -165,11 +164,9 @@ if __name__ == "__main__":
     print("\nInitial Maze Environment:")
     print(maze)
     
-    # Create and train agent
     agent = vanillaDQN(maze)
     print("\nTraining the agent...")
-    agent.train(ep=1000)  # Increased from 100 to 1000 episodes
+    agent.train(ep=1000)  
     
-    # Import and use visualization
     from visual.visualize_maze import visualize_training
     visualize_training(maze, agent, episodes=3)
