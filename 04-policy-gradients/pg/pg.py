@@ -20,7 +20,7 @@ env = gym.make("ALE/Breakout-v5", render_mode="rgb_array")
 
 #hyperparameters
 h = 200
-batchsize = 10
+batchsize = 2
 lr = 1e-4
 gamma = 0.9
 decay = 0.99
@@ -61,22 +61,16 @@ def discount(r):
 
 
 def backward(eph, eplogp, epx):
-    # dw1 = np.zeros_like(w1)
-    # dw2 = np.zeros_like(w2)
     dw2 = np.dot(eplogp.T, eph)
     dh1 = np.dot(eplogp, w2)
-    dh1[eph < 0] = 0
-    dw1 = np.dot(dh1.T, epx)
-    print("dw1 shape:", dw1.shape)
-    print("dw2 shape:", dw2.shape)
+    dh1[eph <= 0] = 0
+    dw1 = np.dot(epx.T, dh1)
+    dw1 = dw1.T
     return {
         "dw1": dw1,
         "dw2": dw2
     }
     
-    
-
-
 
 
 
@@ -87,6 +81,7 @@ ep_rewards = []
 running_reward = 0
 ep = 0
 max_ep = 10
+grad_buffer = {'dw1': np.zeros_like(w1), 'dw2': np.zeros_like(w2)}
 
 
 while True:
@@ -134,6 +129,7 @@ while True:
             p = softmax(logits)
             dlogits = p.copy()
             dlogits[a] -= 1
+            dlogits *= r
             eplogp.append(dlogits)
         
         eplogp = np.array(eplogp)
@@ -141,9 +137,19 @@ while True:
         print("epx shape:", epx.shape)
 
         grads = backward(eph, eplogp, epx)
-        print("grads:", grads)
+        # print("grads:", grads)
 
-        # Reset for next episode
+        grad_buffer['dw1'] += grads['dw1']
+        grad_buffer['dw2'] += grads['dw2']
+
+        if ep % batchsize == 0:
+            w1 += lr * grad_buffer['dw1']
+            w2 += lr * grad_buffer['dw2']
+            grad_buffer['dw1'] = np.zeros_like(w1)
+            grad_buffer['dw2'] = np.zeros_like(w2)
+
+            
+
         obs, info = env.reset()
         prevf = None
         xs, hs, actions = [], [], []
