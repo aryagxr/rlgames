@@ -2,3 +2,9 @@
 __pycache__/
 *.py[cod]
 *$py.class
+
+
+*.pkl
+
+wandb/
+*.wandb/
