@@ -3,27 +3,38 @@
 import gymnasium as gym
 import numpy as np
 import ale_py
+import pickle
+import wandb
 
 
-# TODO:
-# > preprocess frame
-# > frame difference
-# > forwards policy network
-# > sample action
-# > storing reward trajectories
-# > discounting rewards
-# > compute gradients
+#hyperparams
+h = 200
+batchsize = 10
+lr = 1e-5
+gamma = 0.99
+decay = 0.99
+
+
+wandb.init(
+    project="breakout-pg",
+    config={
+        "learning_rate": lr,
+        "batch_size": batchsize,
+        "gamma": gamma,
+        "decay": decay,
+        "hidden_size": h
+    }
+)
+
+resume = False
+if resume:
+    with open("pg_breakout.pkl", "rb") as f:
+        w1, w2, rmsprop = pickle.load(f)
+
 
 env = gym.make("ALE/Breakout-v5", render_mode="rgb_array")
 
 
-
-#hyperparameters
-h = 200
-batchsize = 2
-lr = 1e-4
-gamma = 0.9
-decay = 0.99
 
 num_a = env.action_space.n
 dim = 80*80
@@ -80,8 +91,10 @@ xs, hs, actions = [], [], []
 ep_rewards = []
 running_reward = 0
 ep = 0
-max_ep = 10
+max_ep = 1000
 grad_buffer = {'dw1': np.zeros_like(w1), 'dw2': np.zeros_like(w2)}
+rmsprop = {'dw1': np.zeros_like(w1), 'dw2': np.zeros_like(w2)}
+batch_rewards = []
 
 
 while True:
@@ -93,15 +106,13 @@ while True:
     prevf = curf
     
     aprob, h = forward(f)
-    action = np.random.choice(len(aprob), p=aprob) #weighted
+    action = np.random.choice(len(aprob), p=aprob)
     xs.append(f)
     hs.append(h)
     actions.append(action)
-    # print("Sampled probs:", aprob)
-    # print("Chosen action:", action)
+
     
     obs, r, term, trnc, info = env.step(action)
-    print(f"Reward: {r}, Terminated: {term}, Truncated: {trnc}")
     ep_rewards.append(r)
     running_reward += r
 
@@ -118,11 +129,6 @@ while True:
 
         dr = discount(epr)
         dr = (dr - dr.mean()) / (dr.std() + 1e-8)
-        print("\nEpisode Summary:")
-        print("Raw rewards:", ep_rewards)
-        print("Discounted rewards:", dr)
-        print(f"Total episode reward: {running_reward}")
-        print(f"Average discounted reward: {np.mean(dr)}")
         
         for h, a, r in zip(eph, epa, dr):
             logits = np.dot(w2, h)
@@ -133,22 +139,49 @@ while True:
             eplogp.append(dlogits)
         
         eplogp = np.array(eplogp)
-        print("eplogp shape:", eplogp.shape)
-        print("epx shape:", epx.shape)
 
         grads = backward(eph, eplogp, epx)
-        # print("grads:", grads)
 
         grad_buffer['dw1'] += grads['dw1']
         grad_buffer['dw2'] += grads['dw2']
 
         if ep % batchsize == 0:
-            w1 += lr * grad_buffer['dw1']
-            w2 += lr * grad_buffer['dw2']
-            grad_buffer['dw1'] = np.zeros_like(w1)
-            grad_buffer['dw2'] = np.zeros_like(w2)
-
+            batch_avg_reward = np.mean(batch_rewards) if batch_rewards else 0
+            print(f"Batch {ep//batchsize} avg reward: {batch_avg_reward:.2f}")
+            batch_rewards = []
             
+            for k in rmsprop:
+                g = grad_buffer[k]
+                rmsprop[k] = decay * rmsprop[k] + (1 - decay) * g**2
+                update = lr * g / (np.sqrt(rmsprop[k]) + 1e-5)
+
+                if k == 'dw1':
+                    w1 += update
+                else:
+                    w2 += update
+
+                grad_buffer[k] = np.zeros_like(g)
+
+        avg_reward = np.sum(ep_rewards)
+        running_reward = avg_reward if running_reward == 0 else running_reward * 0.99 + avg_reward * 0.01
+        batch_rewards.append(avg_reward)
+        print(f"Episode {ep} reward: {avg_reward:.1f}, running mean: {running_reward:.1f}")
+
+        wandb.log({
+            "episode": ep,
+            "total_reward": avg_reward,
+            "running_reward": running_reward,
+            "mean_discounted_reward": np.mean(dr),
+            "w1_norm": np.linalg.norm(w1),
+            "w2_norm": np.linalg.norm(w2),
+            "batch_avg_reward": batch_avg_reward if ep % batchsize == 0 else None
+        })
+
+        if ep % 5 == 0:
+            with open("pg_breakout.pkl", "wb") as f:
+                pickle.dump([w1, w2, rmsprop], f)
+
+            wandb.save("pg_breakout.pkl")
 
         obs, info = env.reset()
         prevf = None
